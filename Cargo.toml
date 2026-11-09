@@ -28,6 +28,7 @@ members = [
     "examples/settings",
     "examples/playground",
     "examples/knobs",
+    "examples/mouse-look",
     "examples/kit-gallery",
     "examples/background",
     "examples/live-values",

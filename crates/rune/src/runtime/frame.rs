@@ -63,6 +63,7 @@ impl<S: 'static> Runtime<S> {
             // Deliver the cancelled Up before FocusLost can commit a view that removes its
             // grip (or the focus callback clears the app's drag state).
             if !focused {
+                self.release_pointer_lock();
                 self.cancel_pointer();
                 self.held = physical_dispatch::Activation::Up;
             }
@@ -741,6 +742,7 @@ impl<S: 'static> Runtime<S> {
         self.report_at_bottom();
         animating |= self.report_visible_rows();
         self.report_layout();
+        self.sync_pointer_lock();
         // A report waits for the next frame: draw one to deliver it.
         animating |= self.report_drawn() | self.report_visible();
         self.end_exit_mask();

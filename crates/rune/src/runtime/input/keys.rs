@@ -264,8 +264,9 @@ impl<S: 'static> Runtime<S> {
     /// [`Runtime::key`]; `stage` routes it to the open playground's stage, for `Play::press`.
     pub(super) fn queue_key(&mut self, ev: KeyEvent, stage: bool) {
         self.dismiss_help();
-        // Escape during a drag cancels it and goes no further.
-        if ev.key == crate::Key::Escape && self.cancel_drag() { return; }
+        // Escape during a drag cancels it, and with the pointer captured gives it back; either
+        // goes no further.
+        if ev.key == crate::Key::Escape && (self.cancel_drag() || self.release_pointer_lock()) { return; }
         self.queue.push(Action::Key { ev, repeat: false, stage });
     }
 

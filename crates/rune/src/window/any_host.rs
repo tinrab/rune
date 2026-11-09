@@ -56,6 +56,7 @@ impl<S: 'static> AnyHost for Host<S> {
     fn reopen(&mut self, event_loop: &ActiveEventLoop) { self.in_turn(|h| h.reopen_in_turn(event_loop)) }
     fn new_events(&mut self, event_loop: &ActiveEventLoop, cause: StartCause) { self.in_turn(|h| h.new_events_in_turn(event_loop, cause)) }
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) -> bool { self.in_turn(|h| h.about_to_wait_in_turn(event_loop)) }
+    fn pointer_motion(&mut self, delta: (f64, f64)) { self.in_turn(|h| h.pointer_motion_in_turn(delta)) }
     fn resumed(&mut self, event_loop: &ActiveEventLoop) { self.in_turn(|h| h.resumed_in_turn(event_loop)) }
     fn user_event(&mut self, event_loop: &ActiveEventLoop, event: WakeEvent) { self.in_turn(|h| h.user_event_in_turn(event_loop, event)) }
     fn window_event(&mut self, event_loop: &ActiveEventLoop, id: WindowId, event: WindowEvent) {

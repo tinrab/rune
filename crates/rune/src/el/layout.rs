@@ -631,6 +631,24 @@ impl El {
         { self.handlers.sites.pointer_move = Some(std::panic::Location::caller()); }
         self
     }
+    /// Capture the pointer when this element is pressed, as a game's view or a 3D viewport does:
+    /// the cursor hides and stays in the window, and its raw motion comes to `f` in points
+    /// (`[dx, dy]`, right and down positive) instead of moving a cursor. Escape, the window
+    /// losing focus, or this element going away gives the pointer back; the next press on the
+    /// element captures it again. The press that captures it reaches the element's other
+    /// handlers as usual. [`Runtime::pointer_locked`](crate::Runtime::pointer_locked) says
+    /// whether it holds the pointer.
+    ///
+    /// The host locks the pointer in place where the platform can (macOS, Wayland) and keeps
+    /// it inside the window elsewhere (X11, Windows); the motion is the device's either way.
+    ///
+    /// ```ignore
+    /// el().key("view").grow(1.0).pointer_lock(|s: &mut Game, [dx, _], _| s.turn(dx))
+    /// ```
+    pub fn pointer_lock<S: 'static>(mut self, f: impl Fn(&mut S, [f32; 2], &mut Tx) + 'static) -> Self {
+        self.handlers.pointer_lock = Some(Rc::new(move |s, delta, tx| f(downcast::<S>(s), delta, tx)));
+        self
+    }
     /// [`El::on_pointer_move`] with the point in this element's own layout points as well as
     /// the window's (see [`PointerEvent`]), and a [`Tx`]: a canvas tracks the pointer in its own
     /// coordinates at any zoom, and a handler that only moves a [`Live`](crate::Live) value

@@ -37,7 +37,7 @@ impl<S: 'static> Runtime<S> {
 
     fn cancel_drag_key(&mut self, event: &PhysicalInput) -> bool {
         matches!(event, PhysicalInput::Key { key: PhysicalKeyCode::Escape, pressed: true, .. })
-            && self.cancel_drag()
+            && (self.cancel_drag() || self.release_pointer_lock())
     }
     /// Shift held now decides whether the next press extends a text selection, ahead of the
     /// queue the press itself skips. A key press hides a tooltip.
