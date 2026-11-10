@@ -214,6 +214,8 @@ impl PointerEvent {
 }
 
 pub(crate) type PointerFn = Rc<dyn Fn(crate::states::States<'_>, PointerEvent, &mut Tx)>;
+/// `El::pointer_lock`: the captured pointer's motion, in points.
+pub(crate) type PointerMotionFn = Rc<dyn Fn(crate::states::States<'_>, [f32; 2], &mut Tx)>;
 pub(crate) type DragFn = Rc<dyn Fn(crate::states::States<'_>, &mut Drag, &mut Tx)>;
 pub(crate) type DragOutFn = Rc<dyn Fn(crate::states::StatesRef<'_>) -> Option<crate::DragItem>>;
 pub(crate) type DragEndFn = Rc<dyn Fn(crate::states::States<'_>, crate::DragOutcome, &mut Tx)>;

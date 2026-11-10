@@ -48,6 +48,7 @@ pub(crate) use presented::Presented;
 use presented::composing;
 mod platform_sync;
 use platform_sync::sync_platform;
+mod pointer_lock;
 mod shell_requests;
 mod keys;
 pub(crate) use keys::{key_base, map_key_event, map_mods};
@@ -118,6 +119,8 @@ pub(crate) trait AnyHost {
     fn user_event(&mut self, event_loop: &ActiveEventLoop, event: WakeEvent);
     fn owns(&self, id: WindowId) -> bool;
     fn window_event(&mut self, event_loop: &ActiveEventLoop, id: WindowId, event: WindowEvent);
+    /// The pointing device moved (`DeviceEvent::MouseMotion`), for a captured pointer.
+    fn pointer_motion(&mut self, _event_loop: &ActiveEventLoop, _delta: (f64, f64)) {}
     /// Draws what has no redraw event (a layer surface); true while it needs more frames.
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) -> bool { false }
     /// The turn ends: the next frame it wants is asked for, or a paint put off runs (`redraw`).
@@ -336,6 +339,11 @@ impl ApplicationHandler<WakeEvent> for Windows {
             host.window_event(event_loop, id, event);
         }
         self.cleanup(event_loop);
+    }
+    fn device_event(&mut self, event_loop: &ActiveEventLoop, _device: winit::event::DeviceId, event: winit::event::DeviceEvent) {
+        let winit::event::DeviceEvent::MouseMotion { delta } = event else { return };
+        let _handling = crate::quit::handling();
+        for host in self.hosts.iter_mut().flatten() { host.pointer_motion(event_loop, delta); }
     }
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
         let _handling = crate::quit::handling();

@@ -631,6 +631,31 @@ impl El {
         { self.handlers.sites.pointer_move = Some(std::panic::Location::caller()); }
         self
     }
+    /// Capture the pointer when this element is pressed, as a game's view or a 3D viewport does:
+    /// the cursor hides and stays in the window, and its raw motion comes to `f` as `[dx, dy]`
+    /// (right and down positive) instead of moving a cursor. Escape, the window losing focus,
+    /// or this element going away gives the pointer back; the next press on the element
+    /// captures it again. The press that captures it reaches the element's other handlers as
+    /// usual; a press on a control inside the element, or on something drawn over it, doesn't
+    /// capture. [`Cx::pointer_locked`](crate::Cx::pointer_locked) says whether it holds the
+    /// pointer.
+    ///
+    /// While captured, the pointer stays where the capturing press was, so every button and
+    /// wheel turn goes to the element and nothing else hovers.
+    ///
+    /// The motion is about a point per unit: the event's delta in points on macOS, Wayland's
+    /// unaccelerated relative motion, and the device's counts over the scale factor on X11 and
+    /// Windows, where it's unaccelerated too. The host locks the pointer in place where the
+    /// platform can (macOS, Wayland) and keeps it inside the window elsewhere (X11, Windows).
+    /// Desktop windows only: on the web and iOS the element never captures the pointer.
+    ///
+    /// ```ignore
+    /// el().key("view").grow(1.0).pointer_lock(|s: &mut Game, [dx, _], _| s.turn(dx))
+    /// ```
+    pub fn pointer_lock<S: 'static>(mut self, f: impl Fn(&mut S, [f32; 2], &mut Tx) + 'static) -> Self {
+        self.handlers.pointer_lock = Some(Rc::new(move |s, delta, tx| f(downcast::<S>(s), delta, tx)));
+        self
+    }
     /// [`El::on_pointer_move`] with the point in this element's own layout points as well as
     /// the window's (see [`PointerEvent`]), and a [`Tx`]: a canvas tracks the pointer in its own
     /// coordinates at any zoom, and a handler that only moves a [`Live`](crate::Live) value

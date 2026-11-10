@@ -2470,6 +2470,8 @@ $L --desktop examples/launcher/backdrop.png --script examples/launcher/scripts/d
   "rotate", "degrees": 15}` and `{"type": "smart-magnify"}` are trackpad gestures. Each lands at
   `x,y` or `key`, else where the pointer is. `"button": "middle"` (or `back`, `forward`,
   `secondary`) on `down`, `up`, `tap` and `drag` presses with that button.
+  `{"type": "pointer-motion", "dx": 40, "dy": 0}` moves a captured pointer (`El::pointer_lock`)
+  as a mouse would; a `click` on the element captures it first.
 - **Window resize in scripts**: `{"type": "resize", "dw": -300, "dh": 0, "dur": 0.5}` is a
   person dragging the window's corner, one viewport step a frame with an eased hand, as a live
   resize delivers it (content at rest follows; unlike `Tx::resize_window`). The canvas keeps its

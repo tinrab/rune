@@ -208,6 +208,10 @@ pub(crate) fn parse_script(list: Value) -> Vec<Ev> {
                 let ev = crate::RotateEvent::new(e["degrees"].as_f64().unwrap_or(0.0) as f32).phase(script_phase(&e));
                 out.push(Ev { t, kind: Kind::Rotate(ev), pos });
             }
+            "pointer-motion" => {
+                let d = |k: &str| e[k].as_f64().unwrap_or(0.0) as f32;
+                out.push(Ev { t, kind: Kind::PointerMotion(d("dx"), d("dy")), pos: Pos::Rel(0.0, 0.0) });
+            }
             "smart-magnify" => {
                 gesture_at(&mut out, &pos);
                 out.push(Ev { t, kind: Kind::SmartMagnify, pos });

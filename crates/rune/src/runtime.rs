@@ -358,6 +358,9 @@ mod build;
 mod keys;
 #[path = "runtime/input/pointer.rs"]
 mod pointer;
+#[path = "runtime/input/pointer_lock.rs"]
+mod pointer_lock;
+pub(crate) use pointer_lock::LockEffect;
 use pointer::CLICK_SLOP;
 #[path = "runtime/motion/live_check.rs"]
 mod live_check;
@@ -556,6 +559,7 @@ pub struct Runtime<S: 'static> {
     wheel_lock: scroll_x::WheelLock,
     /// The finger that is down and the viewport a touch holds (`runtime/input/touch.rs`).
     touch: touch_input::Touch,
+    pointer_lock: pointer_lock::PointerLock,
     grows: HashMap<NodeId, GrowTrack>,
     stacks: HashMap<NodeId, Stack>,
     pub(crate) virtuals: HashMap<String, crate::el::virtual_list::VirtualList>,
@@ -930,6 +934,7 @@ impl<S: 'static> Runtime<S> {
             scrolls: HashMap::default(),
             wheel_lock: Default::default(),
             touch: Default::default(),
+            pointer_lock: Default::default(),
             grows: HashMap::default(),
             stacks: HashMap::default(),
             virtuals: HashMap::default(),

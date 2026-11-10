@@ -11,6 +11,8 @@ pub(super) enum Action {
     HoverFocus(Option<String>),
     Dismiss(String),
     PointerMove(String, PointerEvent),
+    /// `El::pointer_lock`: the captured pointer moved by `[dx, dy]` points.
+    PointerLockMotion(String, [f32; 2]),
     Hover(String),
     HoverChange(String, bool),
     /// `El::on_selection_change`.
@@ -79,6 +81,7 @@ impl ActionQueue {
     /// Puts `queued` ahead of everything queued.
     pub(super) fn prepend(&mut self, queued: Vec<Queued>) { self.0.splice(0..0, queued); }
     pub(super) fn iter(&self) -> impl Iterator<Item = &Action> { self.0.iter().map(|q| &q.action) }
+    pub(super) fn last_mut(&mut self) -> Option<&mut Action> { self.0.last_mut().map(|q| &mut q.action) }
     pub(super) fn len(&self) -> usize { self.0.len() }
     pub(super) fn is_empty(&self) -> bool { self.0.is_empty() }
     pub(super) fn retain(&mut self, mut keep: impl FnMut(&Action) -> bool) { self.0.retain(|q| keep(&q.action)); }
@@ -114,6 +117,7 @@ pub(super) fn live_only_handler(action: &Action) -> Option<&'static str> {
         Action::Visible(..) => "on_visible",
         Action::Layout(..) => "on_layout_tx",
         Action::PointerMove(..) => "on_pointer_move_local",
+        Action::PointerLockMotion(..) => "pointer_lock",
         Action::Hover(_) => "on_hover",
         Action::HoverChange(..) => "on_hover_change",
         Action::SelectionChange(..) => "on_selection_change",
@@ -138,7 +142,7 @@ pub(super) fn live_only_handler(action: &Action) -> Option<&'static str> {
 #[cfg(debug_assertions)]
 pub(super) fn action_path(action: &Action) -> Option<&str> {
     match action {
-        Action::PointerMove(path, _) | Action::DrawnLayout(path, ..) | Action::Layout(path, _) | Action::Hover(path) | Action::HoverChange(path, _) | Action::SelectionChange(path, _) | Action::Press(path, _) | Action::DoublePress(path)
+        Action::PointerMove(path, _) | Action::PointerLockMotion(path, _) | Action::DrawnLayout(path, ..) | Action::Layout(path, _) | Action::Hover(path) | Action::HoverChange(path, _) | Action::SelectionChange(path, _) | Action::Press(path, _) | Action::DoublePress(path)
         | Action::Link(path, _) | Action::LinkSecondary(path, ..) | Action::SecondaryPress(path, _) | Action::Drag(path, ..) | Action::DragRepeat(path, ..) | Action::DragStart(path)
         | Action::DragEnd(path, _) | Action::Visible(path, _) => Some(path),
         Action::Wheel(_, chain, _) | Action::Gesture(chain, _) => chain.first().map(String::as_str),
@@ -342,6 +346,11 @@ impl<S: 'static> Runtime<S> {
             Action::PointerMove(path, point) => {
                 let Some(f) = self.node(&path).and_then(|n| n.handlers.on_pointer_move.clone()) else { return false };
                 f(states!(self), point, &mut one);
+                true
+            }
+            Action::PointerLockMotion(path, delta) => {
+                let Some(f) = self.node(&path).and_then(|n| n.handlers.pointer_lock.clone()) else { return false };
+                f(states!(self), delta, &mut one);
                 true
             }
             Action::AtBottom(path, at) => {

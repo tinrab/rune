@@ -16,6 +16,7 @@ pub(super) fn sync_platform<S: 'static>(l: &mut Win, rt: &mut Runtime<S>, secure
         *ime = ime_allowed;
     }
     l.apply_cursor(rt, focused);
+    l.apply_pointer_lock(rt);
     #[cfg(target_os = "macos")]
     l.native.help.sync(&l.window, rt.help_regions());
     // The process has one menu theme: the active window's, so its window menu matches it.
@@ -32,9 +33,14 @@ pub(super) fn sync_platform<S: 'static>(l: &mut Win, rt: &mut Runtime<S>, secure
 
 impl Win {
     /// The runtime's cursor while the pointer is in the window, the arrow once it leaves.
-    /// `Hidden` needs focus, so it can't outlive the window being active.
-    pub(super) fn apply_cursor<S>(&mut self, rt: &Runtime<S>, focused: bool) {
-        let want = match rt.cursor() { crate::el::Cursor::Hidden if !focused => crate::el::Cursor::Default, c => c };
+    /// `Hidden` needs focus, so it can't outlive the window being active; a captured pointer
+    /// (`El::pointer_lock`) is hidden.
+    pub(super) fn apply_cursor<S: 'static>(&mut self, rt: &Runtime<S>, focused: bool) {
+        let want = match rt.cursor() {
+            _ if rt.pointer_locked() && focused => crate::el::Cursor::Hidden,
+            crate::el::Cursor::Hidden if !focused => crate::el::Cursor::Default,
+            c => c,
+        };
         self.cursor.apply(&self.window, want, rt.pointer().is_some());
     }
 }

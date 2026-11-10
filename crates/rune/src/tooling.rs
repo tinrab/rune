@@ -340,6 +340,9 @@ pub(crate) enum Kind {
     Magnify(crate::MagnifyEvent),
     Rotate(crate::RotateEvent),
     SmartMagnify,
+    /// `{"type": "pointer-motion"}`: a captured pointer's motion (dx, dy), as a host reports it
+    /// (`Runtime::pointer_motion`).
+    PointerMotion(f32, f32),
     /// A button besides the primary and secondary (`"button": "middle"`).
     ButtonDown(crate::PointerButton),
     ButtonUp(crate::PointerButton),
@@ -366,6 +369,7 @@ pub(crate) fn canvas_input<S: 'static>(rt: &mut Runtime<S>, kind: &Kind, (x, y):
         Kind::Magnify(ev) => rt.magnify_event(ev.at(x, y)),
         Kind::Rotate(ev) => rt.rotate_event(ev.at(x, y)),
         Kind::SmartMagnify => rt.smart_magnify(x, y),
+        Kind::PointerMotion(dx, dy) => rt.pointer_motion(*dx, *dy),
         Kind::ButtonDown(b) => rt.button_down(x, y, *b),
         Kind::ButtonUp(b) => rt.button_up(x, y, *b),
         Kind::KeyUp(k) => { rt.key_up(k.clone()); }
@@ -454,6 +458,7 @@ impl Ev {
             Kind::ButtonUp(b) => pointer(PointerAction::ButtonUp(*b)),
             Kind::KeyUp(key) => ScriptEvent::KeyUp(key.clone()),
             Kind::Resize(dw, dh) => ScriptEvent::Resize { dw: *dw, dh: *dh },
+            Kind::PointerMotion(dx, dy) => ScriptEvent::PointerMotion { dx: *dx, dy: *dy },
         };
         TimedEvent { t: self.t, event }
     }

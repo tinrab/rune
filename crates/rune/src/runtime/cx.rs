@@ -60,6 +60,7 @@ pub struct Cx<S> {
     pub(super) system_accent: crate::SystemAccent,
     pub(super) system_scroll_bars: crate::platform::scroll_bars::SystemScrollBars,
     pub(super) system_reduced_motion: bool,
+    pub(super) pointer_locked: bool,
     pub(super) reduced_motion: bool,
     pub(super) time_scale: f32,
     pub(super) caret: Option<(String, [f32; 4])>,
@@ -81,7 +82,8 @@ impl<S> Cx<S> {
             titlebar: self.titlebar,
             system_accent: self.system_accent,
             system_scroll_bars: self.system_scroll_bars,
-            system_reduced_motion: self.system_reduced_motion, reduced_motion: self.reduced_motion, time_scale: self.time_scale,
+            system_reduced_motion: self.system_reduced_motion, pointer_locked: self.pointer_locked,
+            reduced_motion: self.reduced_motion, time_scale: self.time_scale,
             caret: self.caret.clone(), caret_read: self.caret_read.clone(),
             layout: self.layout.clone(), layout_reads: self.layout_reads.clone(), _s: PhantomData,
         }
@@ -126,6 +128,11 @@ impl<S> Cx<S> {
     }
     pub fn system_dark(&self) -> bool {
         self.env.system_dark
+    }
+    /// Whether an element's [`El::pointer_lock`](crate::El::pointer_lock) holds the pointer,
+    /// for a "click to look around" hint. The view runs again when it changes.
+    pub fn pointer_locked(&self) -> bool {
+        self.pointer_locked
     }
     /// Points from the window's leading edge to the trailing edge of the macOS traffic lights
     /// drawn over the content, for a top bar's leading inset: 0 when nothing is drawn there (full

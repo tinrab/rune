@@ -35,6 +35,7 @@ impl<S: 'static> Runtime<S> {
             Action::Hover(p) => ("on_hover", 1, Some(p)),
             Action::HoverChange(p, _) => ("on_hover_change", 1, Some(p)),
             Action::PointerMove(p, _) => ("on_pointer_move", 1, Some(p)),
+            Action::PointerLockMotion(p, _) => ("pointer_lock", 1, Some(p)),
             _ => return None,
         };
         let at = path.and_then(|p| self.index_of(p));

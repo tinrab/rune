@@ -5,7 +5,12 @@ use super::*;
 pub(super) const CLICK_SLOP: f32 = 4.0;
 
 impl<S: 'static> Runtime<S> {
-    pub fn pointer_move(&mut self, x: f32, y: f32) { self.move_pointer(x, y, true); }
+    /// While [`Self::pointer_locked`], the pointer stays where the capturing press was: the
+    /// hidden cursor's moves are the window's, not the app's.
+    pub fn pointer_move(&mut self, x: f32, y: f32) {
+        if self.pointer_locked() { return; }
+        self.move_pointer(x, y, true);
+    }
 
     /// `drag_move` false keeps a held drag from getting a `Phase::Move`: a release at the
     /// point the drag last saw has nothing new to report, and its instant transaction would
@@ -175,6 +180,7 @@ impl<S: 'static> Runtime<S> {
     }
 
     pub fn pointer_down(&mut self, x: f32, y: f32) {
+        let (x, y) = self.locked_at(x, y);
         if self.press.held().is_some_and(|h| h.button != crate::PointerButton::Primary) {
             self.pointer = Some((x, y));
             return;
@@ -186,6 +192,7 @@ impl<S: 'static> Runtime<S> {
         // A press is the hand's: hover follows the pointer through moving layout.
         self.release_hover_hold();
         self.focus.step(focus_machine::FocusEvent::Pointed);
+        self.pointer_lock_press(x, y);
         self.press_help(x, y);
         // A press cancels the waits to report an enter; the next move after it starts them again.
         self.hover_pending.retain(|p| !p.1);
@@ -285,6 +292,7 @@ impl<S: 'static> Runtime<S> {
     }
 
     pub fn pointer_up(&mut self, x: f32, y: f32) {
+        let (x, y) = self.locked_at(x, y);
         if self.press.held().is_some_and(|h| h.button != crate::PointerButton::Primary) {
             self.pointer = Some((x, y));
             return;
@@ -342,6 +350,8 @@ impl<S: 'static> Runtime<S> {
     }
 
     pub fn pointer_leave(&mut self) {
+        // A captured pointer hasn't gone anywhere (`pointer_move`).
+        if self.pointer_locked() { return; }
         self.wheel_lost();
         if !self.pointer_captured() {
             self.pointer = None;

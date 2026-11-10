@@ -170,6 +170,7 @@ impl<S: 'static> Runtime<S> {
     /// element there that takes it ([`El::pointer_buttons`]), whose `on_drag` and `on_press`
     /// follow as for the primary button.
     pub fn button_down(&mut self, x: f32, y: f32, button: PointerButton) {
+        let (x, y) = self.locked_at(x, y);
         match button {
             PointerButton::Primary => return self.pointer_down(x, y),
             PointerButton::Secondary => return self.secondary_down(x, y),
@@ -199,6 +200,7 @@ impl<S: 'static> Runtime<S> {
 
     /// A mouse button came up at (x, y): the release of [`Self::button_down`].
     pub fn button_up(&mut self, x: f32, y: f32, button: PointerButton) {
+        let (x, y) = self.locked_at(x, y);
         match button {
             PointerButton::Primary => self.pointer_up(x, y),
             PointerButton::Secondary => self.secondary_up(x, y),
